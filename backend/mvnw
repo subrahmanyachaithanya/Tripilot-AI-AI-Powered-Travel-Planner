@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Small project-local Maven bootstrap. It avoids relying on an old system Maven.
+set -eu
+MAVEN_VERSION="3.9.11"
+MAVEN_HOME_DIR="${HOME}/.m2/wrapper/dists/apache-maven-${MAVEN_VERSION}"
+MAVEN_BIN="${MAVEN_HOME_DIR}/bin/mvn"
+
+if [ ! -x "${MAVEN_BIN}" ]; then
+  mkdir -p "${MAVEN_HOME_DIR}"
+  ARCHIVE="${TMPDIR:-/tmp}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+  URL="https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+  echo "Downloading Apache Maven ${MAVEN_VERSION} for this project..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -fL "${URL}" -o "${ARCHIVE}"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -O "${ARCHIVE}" "${URL}"
+  else
+    echo "Install curl or wget, then run this command again." >&2
+    exit 1
+  fi
+  tar -xzf "${ARCHIVE}" -C "${MAVEN_HOME_DIR}" --strip-components=1
+fi
+
+exec "${MAVEN_BIN}" "$@"
